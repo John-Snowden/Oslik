@@ -1,6 +1,6 @@
 import { SerialPort } from "serialport";
 
-import { fullAB } from "./routeA";
+import { currentRoute } from "./route";
 
 const port = new SerialPort({
   path: "/dev/ttys003",
@@ -11,10 +11,9 @@ port.on("data", (data) => {
   const parsed = JSON.parse(data);
   const res = {
     status: { name: "connected", text: "OK" },
-    index: parsed.index,
-    route: parsed.route,
+    task: parsed.task,
   };
-  console.log(res);
+  console.log("res ", res);
 
   setTimeout(() => port.write(JSON.stringify(res)), 1000);
 });
@@ -25,7 +24,6 @@ port.on("open", () => {
 
 const initData = {
   status: { name: "connected", text: "OK" },
-  index: 0,
-  route: fullAB[0],
+  task: currentRoute[0],
 };
 port.write(JSON.stringify(initData));

@@ -3,18 +3,14 @@ type TStatus = {
   text: string;
 };
 
-export type TRoute = {
+export type TTask = {
   distance: number;
   degree: number;
   speed: number;
   timeout: number;
 };
 
-export type TData = {
-  index: number;
-  route: TRoute;
-};
-
-export type TFull = TData & {
+export type TFull = {
   status: TStatus;
+  task: TTask;
 };

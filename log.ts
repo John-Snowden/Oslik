@@ -1,8 +1,9 @@
 import { TFull } from "./types";
+import { currentTaskIndex } from "./route";
 
-export const logRoute = (data: TFull) => {
+export const logTask = (data: TFull) => {
   routeLogs.push(data);
-  if (data.index) console.log("ROUTE " + data.index + " COMPLETE");
+  console.log("TASK " + currentTaskIndex + " COMPLETE");
 };
 
 export const routeLogs: TFull[] = [];

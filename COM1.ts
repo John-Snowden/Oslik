@@ -1,26 +1,26 @@
 import { SerialPort } from "serialport";
 
 import { TFull } from "./types";
-import { logRoute } from "./log";
-import { fullAB } from "./routeA";
-import { finishRoute, nextRoute } from "./utils";
+import { logTask } from "./log";
+import { currentRoute, currentTaskIndex } from "./route";
+import { finishRoute, getNextTask } from "./utils";
 
 const port = new SerialPort({
   path: "/dev/ttys004",
   baudRate: 57600,
 });
 
-const sendRoute = (data: TFull) => {
-  if (fullAB.length - 1 === data.index) finishRoute();
-  else port.write(nextRoute(data));
+const sendTask = () => {
+  if (currentRoute.length - 1 === currentTaskIndex) finishRoute();
+  else port.write(getNextTask());
 };
 
 port.on("data", (data: string): void => {
   const typed = JSON.parse(data) as TFull;
-  logRoute(typed);
+  logTask(typed);
 
   if (typed.status.name !== "connected") return;
-  else sendRoute(typed);
+  else sendTask();
 });
 
 port.on("open", () => {
