@@ -5,13 +5,14 @@
 
 import { TTask } from "./types";
 
-const initTask: TTask = {
+export const initTask: TTask = {
   distance: 0,
   degree: 0,
   speed: 0,
   timeout: 0,
 };
 
+// mocks
 const routeA: TTask[] = [
   {
     distance: 1000,
@@ -74,7 +75,6 @@ const routeA: TTask[] = [
     timeout: 500,
   },
 ];
-
 const routeB: TTask[] | null = [
   {
     distance: 550,

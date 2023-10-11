@@ -1,17 +1,18 @@
 import { SerialPort } from "serialport";
 
-import { currentRoute } from "./route";
+import { TFull } from "./types";
+import { initTask } from "./route";
 
 const port = new SerialPort({
   path: "/dev/ttys003",
   baudRate: 57600,
 });
 
-port.on("data", (data) => {
-  const parsed = JSON.parse(data);
-  const res = {
+port.on("data", (data: string) => {
+  const { task } = JSON.parse(data);
+  const res: TFull = {
     status: { name: "connected", text: "OK" },
-    task: parsed.task,
+    task,
   };
   console.log("res ", res);
 
@@ -22,8 +23,4 @@ port.on("open", () => {
   console.log("COM2 LISTENING...");
 });
 
-const initData = {
-  status: { name: "connected", text: "OK" },
-  task: currentRoute[0],
-};
-port.write(JSON.stringify(initData));
+port.write(JSON.stringify(initTask));

@@ -1,4 +1,3 @@
-import { routeLogs } from "./log";
 import {
   currentRoute,
   currentTaskIndex,
@@ -6,6 +5,7 @@ import {
   loadRouteB,
 } from "./route";
 import { TTask } from "./types";
+import { routeLogs } from "./log";
 
 export const getNextTask = (): string => {
   incrementTaskIndex();
