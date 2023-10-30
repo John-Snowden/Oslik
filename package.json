@@ -21,5 +21,9 @@
   },
   "compilerOptions": {
     "module": "CommonJS"
-  }
+  },
+  "nodemonConfig": {
+    "ignore": ["*.json"]
+ }
 }
+

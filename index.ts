@@ -1,26 +1,32 @@
-import { usb } from "usb";
+import { usb } from 'usb';
 
-let device: usb.Device | null = null;
+import { arduinoPort, loadNextRoute, sendTask, ubuntuPort } from './COM_ubuntu';
+import { onAttachDevice, onDetachDevice } from './phone/phoneCommunicationUtils'
 
-const getDevice = async () => {
-  if (!device) {
-    console.log("Deviced not found");
-    return;
+console.log('Ослик запущен...');
+
+usb.on('attach', onAttachDevice)
+usb.on('detach', onDetachDevice)
+
+arduinoPort.on("open", () => {
+  arduinoPort.write(JSON.stringify('Порт arduino открыт'))
+})
+arduinoPort.on('data', (data) => {
+  console.log('Arduino получил данные:', data.toString())
+  setTimeout(()=>arduinoPort.write(JSON.stringify('ok')), 1000)
   }
-  // console.log(device);
+)
 
-  device.open();
-  device.interface(0).claim();
-  // console.log("Device interfaces", device.interfaces);
-
-  const [outPoint, inPoint] = device.interface(0).endpoints;
-  console.log("outPoint", outPoint);
-};
-
-usb.on("attach", (data) => {
-  console.log("device attached");
-  device = data;
-  getDevice();
+ubuntuPort.on("open", () => console.log("Порт ubuntu открыт"));
+ubuntuPort.on("data", (data) => {
+  const res = data.toString()
+  console.log('Ubuntu получил данные', res)
+  if (res === 'getNewRoute') loadNextRoute()
+  else sendTask()
+  
 });
 
-usb.on("detach", () => console.log("device detached"));
+process.on('unhandledRejection', (err) => { 
+    console.error('unhandledRejection',err);
+    process.exit(1);
+  })
