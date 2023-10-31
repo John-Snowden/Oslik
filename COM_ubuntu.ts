@@ -8,10 +8,11 @@ export const ubuntuPort = new SerialPort({
   baudRate: 57600,
 });
 
-export const arduinoPort = new SerialPort({
-  path: "/dev/pts/5",
-  baudRate: 57600,
-});
+// Test
+// export const arduinoPort = new SerialPort({
+//   path: "/dev/pts/5",
+//   baudRate: 57600,
+// });
 
 let currentTaskIndex = 0;
 let currentRoute: TTask[] = []
@@ -41,6 +42,5 @@ export const loadNextRoute = () => {
     console.log('Маршрут загружен');
     writeFileSync('./phone/pendingRoutes.json', JSON.stringify(routes))
   }
-  
 };
 
