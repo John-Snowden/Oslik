@@ -14,8 +14,11 @@ export const ubuntuPort = new SerialPort({
 //   baudRate: 57600,
 // });
 
+let isActive = false
+let isRecording = false
 let currentTaskIndex = 0;
 let currentRoute: TTask[] = []
+let currentRecordedRoute: TTask[] =[]
 
 const getNextTask = (): string => {
   const nextTask: TTask = currentRoute[currentTaskIndex];
@@ -24,8 +27,7 @@ const getNextTask = (): string => {
 };
 
 export const sendTask = () => {
-  if (currentRoute.length === 0) console.log('Маршрут не загружен');
-  else if (currentRoute.length === currentTaskIndex) console.log('Маршрут завершен');
+  if (currentRoute.length === currentTaskIndex) console.log('Маршрут завершен');
   else ubuntuPort.write(getNextTask());
 };
 
@@ -44,3 +46,27 @@ export const loadNextRoute = () => {
   }
 };
 
+export const recordTask = (data:TTask | string) => {
+  if ((data as string).includes('start')) isRecording = true
+  else if ((data as string).includes('end')) {
+    isRecording = false
+    const recordedRoutes = JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
+    recordedRoutes.push(currentRecordedRoute)
+    writeFileSync('./phone/recordedRoutes.json', JSON.stringify(recordedRoutes))
+    currentRecordedRoute = []
+  }
+  else currentRecordedRoute.push(data as TTask)
+}
+
+export const toggleStart = () => {
+  if (currentRoute.length === 0) {
+    console.log('Загружается новый маршрут...')
+    isActive = true
+    loadNextRoute()
+  }
+  else {
+    isActive = !isActive
+    if (isActive) getNextTask()
+    else return
+  }
+}

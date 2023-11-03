@@ -1,9 +1,15 @@
+<!-- start 2 virtual ports -->
 socat -d -d pty,raw,echo=0 pty,raw,echo=0
 
+<!-- ? -->
 sudo adduser john-snowden dialout
 sudo chown john-snowden /dev/pts
 sudo chmod o+rw /dev/pts
 
+<!-- router setup -->
+назначь оранджпаю статичский ip
+
+<!-- pm2 run index.ts at startup -->
 which ts-node
 pm2 start index.ts --interpreter /usr/local/bin/ts-node
 pm2 log
@@ -55,8 +61,23 @@ $ pm2 save
 [PM2] Remove init script via:
 $ pm2 unstartup systemd
 
-
+<!-- TTrack -->
 дистанция в см
 направление в градусах
 скорость в м/с
 таймаут в мс
+
+<!-- OrangePI  -->
+ssh root@192.168.1.9
+password orangepi
+cd /home/orangepi/Desktop
+scp -r ~/Desktop/Oslik1.1/Oslik/  root@192.168.1.98:/home/orangepi/Desktop
+npm i -g ts-node
+rm -r node_modules
+npm i
+npm i -g pm2
+pm2 start index.ts --interpreter /usr/local/bin/ts-node
+pm2 log
+pm2 startup
+pm2 save
+reboot
