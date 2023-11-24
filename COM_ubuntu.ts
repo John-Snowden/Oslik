@@ -4,26 +4,18 @@ import {  writeFileSync, readFileSync } from 'fs';
 import { TTask } from "./types";
 
 export const ubuntuPort = new SerialPort({
-  path: "/dev/pts/4",
+  path:"/dev/serial/by-id/usb-Arduino_Uno_Arduino_Uno_2017-2-25-if00",
   baudRate: 57600,
 });
 
-// Test
-// export const arduinoPort = new SerialPort({
-//   path: "/dev/pts/5",
-//   baudRate: 57600,
-// });
-
-let isActive = false
 let isRecording = false
 let currentTaskIndex = 0;
 let currentRoute: TTask[] = []
 let currentRecordedRoute: TTask[] =[]
 
 const getNextTask = (): string => {
-  const nextTask: TTask = currentRoute[currentTaskIndex];
   currentTaskIndex++;
-  return JSON.stringify(nextTask);
+  return JSON.stringify(currentRoute[currentTaskIndex]);
 };
 
 export const sendTask = () => {
@@ -47,8 +39,8 @@ export const loadNextRoute = () => {
 };
 
 export const recordTask = (data:TTask | string) => {
-  if ((data as string).includes('start')) isRecording = true
-  else if ((data as string).includes('end')) {
+  if ((data as string)==='start') isRecording = true
+  else if ((data as string)==='end') {
     isRecording = false
     const recordedRoutes = JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
     recordedRoutes.push(currentRecordedRoute)
@@ -58,15 +50,10 @@ export const recordTask = (data:TTask | string) => {
   else currentRecordedRoute.push(data as TTask)
 }
 
-export const toggleStart = () => {
+export const start = () => {
   if (currentRoute.length === 0) {
     console.log('Загружается новый маршрут...')
-    isActive = true
     loadNextRoute()
   }
-  else {
-    isActive = !isActive
-    if (isActive) getNextTask()
-    else return
-  }
+  getNextTask()
 }

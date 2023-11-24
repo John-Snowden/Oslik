@@ -68,10 +68,21 @@ $ pm2 unstartup systemd
 таймаут в мс
 
 <!-- OrangePI  -->
-ssh root@192.168.1.9
+ssh root@192.168.1.112
 password orangepi
+scp -r ~/Desktop/Oslik1.1/Oslik/  root@192.168.1.112:/home/orangepi/Desktop
 cd /home/orangepi/Desktop
-scp -r ~/Desktop/Oslik1.1/Oslik/  root@192.168.1.98:/home/orangepi/Desktop
+<!-- nodejs -->
+sudo apt update
+sudo apt install nodejs   
+sudo apt install npm
+sudo npm cache clean -f
+sudo npm install -g n
+sudo n stable
+sudo n 18.18.2
+close terminal for changes to take effect
+sudo n 18.18.2
+<!--  -->
 npm i -g ts-node
 rm -r node_modules
 npm i
@@ -81,3 +92,19 @@ pm2 log
 pm2 startup
 pm2 save
 reboot
+pm2 log
+
+
+Arduino link
+
+sudo su
+cd /etc/udev
+dmesg -w then connect the arduino
+ls /dev/ttyACM*
+ls /dev/serial/by-id/
+<!-- udevadm info -a -n /dev/ttyACM0
+cat > arduino.rules
+SUBSYSTEM=="tty", ATTRS{idVendor}==="2341", ATTRS{idProduct}=="0043", SYMLINK+="arduino_uno"
+cat ./arduino.rules
+udevadm control --reload
+reboot -->
