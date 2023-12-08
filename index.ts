@@ -1,6 +1,6 @@
 import { usb } from 'usb';
 
-import { pause, recordTask, sendTask, start, ubuntuPort } from './COM_ubuntu';
+import { recordTask, sendTask, start, ubuntuPort } from './COM_ubuntu';
 import { onAttachDevice, onDetachDevice } from './phone/phoneCommunicationUtils'
 
 console.log('Ослик запущен...');

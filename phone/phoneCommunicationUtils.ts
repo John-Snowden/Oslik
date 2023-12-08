@@ -6,18 +6,19 @@ import { IPhoneAppSettings } from './types'
 let settingPathTimer: NodeJS.Timeout
 let settingsTimer: NodeJS.Timeout
 
+let isSafeRemove = false
+
 let clientSettingsPath = ''
 const cachedSettingsPath = './phone/cachedSettingsPath.json'
 let clientSettings: IPhoneAppSettings | null = null
-let serverSettings: IPhoneAppSettings | null = null
 
 export const getSettingsPath = (path: string) => {
     if(clientSettingsPath) return
     console.log('Поиск пути к файлу настроек...');
     const files = readdirSync(path)
     
-    if(files.includes('Oslik.json')) {
-        clientSettingsPath = path + '/Oslik.json'
+    if(files.includes('OslikHodovaya.json')) {
+        clientSettingsPath = path + '/OslikHodovaya.json'
         writeFileSync(cachedSettingsPath, JSON.stringify(clientSettingsPath))
         console.log('Настройки найдены:', clientSettingsPath);
     }
@@ -25,17 +26,48 @@ export const getSettingsPath = (path: string) => {
         if(statSync(path + '/' + file).isDirectory()){ 
             getSettingsPath(path + '/' + file)
             }
+            else {
+                console.log('Файл настроек на телефоне не найден.')
+            }
         }
     )
 }
 
-const updateClientSettings = () => {
-   if(clientSettingsPath) writeFileSync(clientSettingsPath, JSON.stringify(serverSettings))
-}
-
 export const onAttachDevice = () => {
     console.log('Телефон подключен');
+    findSettingsPath()
+ 
+    settingsTimer = setInterval(() => {        
+        if(!clientSettingsPath) return
+        else {            
+            clientSettings = JSON.parse(readFileSync(clientSettingsPath, 'utf-8'))
 
+            if (!clientSettings || isSafeRemove) return
+
+            if (clientSettings.isSafeRemove) {
+                isSafeRemove = true
+                return
+            }
+
+            if (clientSettings.pendingRoutes.length!==0) {
+                writeFileSync('./phone/pendingRoutes.json', JSON.stringify(clientSettings.pendingRoutes))
+                clientSettings.pendingRoutes = []
+            }
+
+            const recordedRoutes = JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
+            if (recordedRoutes.length!==0) {
+                clientSettings.recordedRoutes.push(recordedRoutes)
+                writeFileSync('./phone/recordedRoutes.json', JSON.stringify([]))
+            }
+
+            clientSettings.isConnected=true
+            
+            writeFileSync(clientSettingsPath, JSON.stringify(clientSettings))
+        }
+    }, 1000);
+}
+
+const findSettingsPath = () => {
     if(!clientSettingsPath) {
         settingPathTimer = setInterval(()=>{
             if(clientSettingsPath)clearInterval(settingPathTimer) 
@@ -44,40 +76,6 @@ export const onAttachDevice = () => {
             }
         },1000)
     }
- 
-    settingsTimer = setInterval(() => {
-        if(!clientSettingsPath) return
-        else {
-            console.log('Слушаю настройки...',clientSettings);
-            clientSettings = JSON.parse(readFileSync(clientSettingsPath, 'utf-8'))
-            if (!clientSettings) return
-
-            serverSettings = {...clientSettings}
-            if (clientSettings.isClientSendingPendingRoutes) writePendingRoutesToServer()
-            if (clientSettings.isClientRequestingLastRecordedRoutes) writeRecordedRoutesToClient()
-            if (!clientSettings.isServerFoundSettings) {
-                serverSettings.isServerFoundSettings = true
-                updateClientSettings()
-            }
-        }
-    }, 1000);
-}
-
-const writePendingRoutesToServer = () =>{
-    writeFileSync('./phone/pendingRoutes.json', JSON.stringify(clientSettings!.pendingRoutes))
-    serverSettings!.isClientSendingPendingRoutes = false
-    serverSettings!.pendingRoutes = []
-    updateClientSettings()
-}
-
-const writeRecordedRoutesToClient = () => {
-    const recordedRoutes = JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
-    if (recordedRoutes.length !== 0) {
-        serverSettings!.recordedRoutes = recordedRoutes
-        writeFileSync('./phone/recordedRoutes.json', JSON.stringify([]))
-    }
-    serverSettings!.isClientRequestingLastRecordedRoutes = false
-    updateClientSettings()
 }
 
 const isDataTransferEnabled = () => {
@@ -98,9 +96,11 @@ const getCachedSettingsPath = () => {
 
  export const onDetachDevice = () => {
     console.log('Телефон отключен');
-    if (serverSettings) serverSettings.isServerFoundSettings = false
+    isSafeRemove = false
     clientSettingsPath = ''
     clientSettings = null
     clearInterval(settingPathTimer)
     clearInterval(settingsTimer)
 }
+
+

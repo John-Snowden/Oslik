@@ -1,1 +1,15 @@
-[]
+[[{ "id":"0",
+"distance": 1000,
+"degree": 45,
+"speed": 2,
+"timeout": 45},
+{ "id":"1",
+"distance": 2000,
+"degree": 45,
+"speed": 2,
+"timeout": 0},
+{ "id":"2",
+"distance": 3000,
+"degree": 45,
+"speed": 2,
+"timeout": 0}]]

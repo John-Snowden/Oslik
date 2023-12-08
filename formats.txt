@@ -3,3 +3,8 @@
 '[w]:start' - begin recording new route
 '[w]:end' - end recording new route
 '[w]:{"id":"string", "distance": "number", "degree": "number", "speed": "number", "timeout": "number"}' - json format, record new task to server
+
+  distance: дистанция в км
+  degree: угол в минутах;
+  speed: скорость в км/ч;
+  timeout: таймаут перед выполнением в мин;
