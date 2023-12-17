@@ -5,6 +5,7 @@
 '[w]:{"id":"string", "distance": "number", "degree": "number", "speed": "number", "timeout": "number"}' - json format, record new task to server
 
   distance: дистанция в км
-  degree: угол в минутах;
+  degree: угол в градусах;
   speed: скорость в км/ч;
-  timeout: таймаут перед выполнением в мин;
+  timeout: таймаут перед выполнением в мин;0
+  
