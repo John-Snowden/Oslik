@@ -1,5 +1,5 @@
 import { SerialPort } from "serialport";
-import {  writeFileSync, readFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 
 import { TTask } from "./types";
 
@@ -15,7 +15,9 @@ let currentRecordedRoute: TTask[] =[]
 
 const getNextTask = (): string => {
   currentTaskIndex++;
-  return JSON.stringify(currentRoute[currentTaskIndex]);
+  const task = currentRoute[currentTaskIndex]
+  const formatted = `id:${task.id},distance:${task.distance},degree:${task.degree},speed:${task.speed},timeout:${task.timeout}`
+  return formatted
 };
 
 export const sendTask = () => {
@@ -38,16 +40,26 @@ export const loadNextRoute = () => {
   }
 };
 
-export const recordTask = (data:TTask | string) => {
-  if ((data as string)==='start') isRecording = true
-  else if ((data as string)==='end') {
+export const recordTask = (data: string) => {
+  if (data==='start') isRecording = true
+  else if (data==='end'){
     isRecording = false
     const recordedRoutes = JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
     recordedRoutes.push(currentRecordedRoute)
     writeFileSync('./phone/recordedRoutes.json', JSON.stringify(recordedRoutes))
     currentRecordedRoute = []
   }
-  else currentRecordedRoute.push(data as TTask)
+  else {
+    const values = data.split(',').map(array=> array.split(':')[1])
+    const formatted:TTask = {
+      id:values[0],
+      distance:Number(values[1]),
+      degree:Number(values[2]),
+      speed:Number(values[3]),
+      timeout:Number(values[4])
+    }
+    currentRecordedRoute.push(formatted)
+  }
 }
 
 export const start = () => {
@@ -56,5 +68,5 @@ export const start = () => {
     console.log('Загружается новый маршрут...')
     loadNextRoute()
   }
-  getNextTask()
+  sendTask()
 }
