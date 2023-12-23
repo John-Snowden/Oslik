@@ -1,4 +1,4 @@
-import {  writeFileSync, readdirSync, readFileSync, statSync, existsSync} from 'fs';
+import {  writeFileSync, readdirSync, readFileSync, statSync} from 'fs';
 
 import { basePath } from './phoneConstants'
 import { IPhoneAppSettings } from './types'
@@ -12,37 +12,21 @@ let clientSettingsPath = ''
 const cachedSettingsPath = './phone/cachedSettingsPath.json'
 let clientSettings: IPhoneAppSettings | null = null
 
-export const getSettingsPath = (path: string) => {
-    if(clientSettingsPath) return
-    console.log('Поиск пути к файлу настроек...');
-    const files = readdirSync(path)
-    
-    if(files.includes('OslikHodovaya.json')) {
-        clientSettingsPath = path + '/OslikHodovaya.json'
-        writeFileSync(cachedSettingsPath, JSON.stringify(clientSettingsPath))
-        console.log('Настройки найдены:', clientSettingsPath);
-    }
-    else files.forEach(file=>{
-        if(statSync(path + '/' + file).isDirectory()){ 
-            getSettingsPath(path + '/' + file)
-            }
-            else {
-                console.log('Файл настроек на телефоне не найден.')
-            }
-        }
-    )
-}
-
 export const onAttachDevice = () => {
-    console.log('Телефон подключен');
-    findSettingsPath()
+    setSettingsPath()
  
-    settingsTimer = setInterval(() => {        
-        if(!clientSettingsPath) return
+    settingsTimer = setInterval(async () => {        
+        if(!clientSettingsPath) {
+            console.log("Файл настроек не найден!");
+            return;
+        }
         else {            
-            clientSettings = JSON.parse(readFileSync(clientSettingsPath, 'utf-8'))
-
+            const settings = JSON.parse(readFileSync(clientSettingsPath, 'utf-8'))
+            clientSettings = settings
+            
             if (!clientSettings || isSafeRemove) return
+            console.log('Слушаю настройки ', clientSettings);
+
 
             if (clientSettings.isSafeRemove) {
                 isSafeRemove = true
@@ -54,7 +38,7 @@ export const onAttachDevice = () => {
                 clientSettings.pendingRoutes = []
             }
 
-            const recordedRoutes = JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
+            const recordedRoutes =  JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
             if (recordedRoutes.length!==0) {
                 clientSettings.recordedRoutes.push(recordedRoutes)
                 writeFileSync('./phone/recordedRoutes.json', JSON.stringify([]))
@@ -67,31 +51,47 @@ export const onAttachDevice = () => {
     }, 1000);
 }
 
-const findSettingsPath = () => {
-    if(!clientSettingsPath) {
-        settingPathTimer = setInterval(()=>{
-            if(clientSettingsPath)clearInterval(settingPathTimer) 
-            if (isDataTransferEnabled()) {
-                if (!getCachedSettingsPath()) getSettingsPath(basePath)
+const setSettingsPath = () => {
+    settingPathTimer = setInterval(()=>{
+        const files = readdirSync(basePath)
+        console.log(files.length !== 0 ? 'Oslik увидел файловую систему телефона' : 'Oslik НЕ ВИДИТ файловую систему телефона');
+
+        if (files.length !== 0) {
+            clearInterval(settingPathTimer)
+
+            console.log("Ищу путь к файлу настроек...");
+            const cached = JSON.parse(readFileSync(cachedSettingsPath, 'utf8'))
+            
+            if(cached.path){
+                clientSettingsPath = cached.path
+                console.log('Путь к настройкам найден в кэше. ', clientSettingsPath);
             }
-        },1000)
-    }
-}
+            else {
+                console.log('Поиск пути к файлу настроек...');
+                searchSettingsPath(basePath)
+            }
+        }
+    }, 1000)
+}  
 
-const isDataTransferEnabled = () => {
-    const files = readdirSync(basePath)
-    return files.length !== 0
- }  
-
-const getCachedSettingsPath = () => {
-    const cached = JSON.parse(readFileSync(cachedSettingsPath, 'utf8'))
-    if(existsSync(cached)){ 
-        clientSettingsPath = JSON.parse(readFileSync(cachedSettingsPath, 'utf8'))
-        console.log('Настройки найдены в кэше:', clientSettingsPath);
-        return true
+export const searchSettingsPath = (path: string) => {
+    if(clientSettingsPath) {
+        console.log("Путь к настройкам уже найден, выхожу из поиска.", clientSettingsPath);
+        return
     }
 
-    return false
+    const files = readdirSync(path)
+    if(files.includes('OslikHodovaya.json')) {
+        clientSettingsPath = path + '/OslikHodovaya.json'
+        writeFileSync(cachedSettingsPath, JSON.stringify({path:clientSettingsPath}))
+    }
+    else files.forEach(file=>{
+        console.log('Файл настроек в ' + path + ' не найден.')
+        if(statSync(path + '/' + file).isDirectory()){ 
+            searchSettingsPath(path + '/' + file)
+            }
+        }
+    )
 }
 
  export const onDetachDevice = () => {

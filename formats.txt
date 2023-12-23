@@ -1,8 +1,8 @@
-'[power on]' - start new route/resume current task
+'[power]' - start new route/resume current task
 '[r]' - get next task
 '[w]:start' - begin recording new route
 '[w]:end' - end recording new route
-'[w]:{"id":"string", "distance": "number", "degree": "number", "speed": "number", "timeout": "number"}' - json format, record new task to server
+'[w]:{"id":"string", "distance": "number", "degree": "number", "speed": "number", "timeout": "number"}' - string format, record new task to server
 
   distance: дистанция в км
   degree: угол в градусах;

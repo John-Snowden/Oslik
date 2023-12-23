@@ -51,6 +51,7 @@ export const recordTask = (data:TTask | string) => {
 }
 
 export const start = () => {
+  if (isRecording) return
   if (currentRoute.length === 0) {
     console.log('Загружается новый маршрут...')
     loadNextRoute()

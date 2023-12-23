@@ -1,7 +1,8 @@
 import { usb } from 'usb';
 
+
 import { recordTask, sendTask, start, ubuntuPort } from './COM_ubuntu';
-import { onAttachDevice, onDetachDevice } from './phone/phoneCommunicationUtils'
+import { onAttachDevice, onDetachDevice } from './phone/usbCommunications'
 
 console.log('Ослик запущен...');
 
@@ -14,7 +15,7 @@ ubuntuPort.on("data", (data) => {
   const res = data.toString()
   console.log('Ubuntu получил данные', res)
 
-  if(res === '[power on]') start()
+  if(res === '[power]') start()
   else if(res === '[r]') sendTask()
   else if(res.includes('[w]')) recordTask(res.split('[w]:')[1])
   else console.log('Неизвестная команда от ардуино');
