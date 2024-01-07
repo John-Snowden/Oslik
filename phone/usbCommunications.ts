@@ -1,11 +1,11 @@
 
-import { IPhoneAppSettings } from './types'
+import { TSettings } from './types'
 import { writeFileSync, readFileSync } from 'fs';
 const drivelist = require('drivelist');
 import shell from 'shelljs'
 
 let clientSettingsPath = ''
-let clientSettings: IPhoneAppSettings | null = null
+let clientSettings: TSettings | null = null
 
 let mountingCounter = 0
 

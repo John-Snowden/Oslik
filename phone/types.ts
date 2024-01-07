@@ -1,6 +1,6 @@
 import { TTask } from "../types";
 
-export type IPhoneAppSettings = {
+export type TSettings = {
     pendingRoutes: TTask[][],
     recordedRoutes: TTask[][],
     isConnected:boolean

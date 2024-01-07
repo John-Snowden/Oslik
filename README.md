@@ -31,8 +31,7 @@ sudo n 18.18.2
 close terminal for changes to take effect
 <!--  -->
 npm i -g ts-node
-rm -r node_modules
-npm i
+rm -r node_modules && npm i
 <!-- pm2 run index.ts at startup -->
 npm i -g pm2
 pm2 start index.ts --interpreter /usr/local/bin/ts-node
@@ -55,5 +54,12 @@ ls /dev/serial/by-id/
     "timeout": 0
   }
 
-<!-- mount -->
+<!-- mount usb-->
 shell.exec('mount /dev/sda1 ./media')
+
+<!-- mount android -->
+sudo apt-get install android-file-transfer
+aft-mtp-mount /home/orangepi/Desktop/Oslik/media/
+
+<!-- unmount android -->
+fusermount -u /home/orangepi/Desktop/Oslik/media/
