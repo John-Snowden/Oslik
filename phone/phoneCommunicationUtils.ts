@@ -25,18 +25,21 @@ export const onAttachDevice = () => {
         clearInterval(settingPathTimer)
         const cachedJson = await readFile(cachedPaths, 'utf8')
         const cached = JSON.parse(cachedJson)
-        if(cached.settings){
+        if(cached.settings && cached.connection){
             const settingsJson = await readFile(cached.settings, 'utf8')
             const settings = JSON.parse(settingsJson)
-            if(settings) {
-                console.log('Путь к настройкам найден в кэше. ', cached.settings)
+            const connectionJson = await readFile(cached.connection, 'utf8')
+            const connection = JSON.parse(connectionJson)
+            if(settings && connection) {
+                console.log('Путь к настройкам найден в кэше. ', cached)
                 clientSettingsPath = cached.settings
+                clientConnectionPath = cached.connection
                 clientSettings = settings
             }
         }
         else {
-            console.log('Кэшированный путь к файлу устарел');
-            writeFile(cachedPaths, JSON.stringify({...cached, settings:""}))        
+            console.log('Кэшированный путь к файлам устарел');
+            writeFile(cachedPaths, JSON.stringify({settings:"", connection:""}))        
             console.log('Ищу путь к файлу настроек...');
             await searchSettingsPath(mountPoint)
         }
@@ -64,30 +67,35 @@ export const onAttachDevice = () => {
             if (!clientSettings) return
             console.log('Слушаю настройки ', clientSettings);
 
-            if (clientSettings.pendingRoutes.length!==0) {
-                await writeFile('./phone/pendingRoutes.json', JSON.stringify(clientSettings.pendingRoutes))
-                clientSettings.pendingRoutes = []
-            }
-
             const recordedRoutesJson = await readFile('./phone/recordedRoutes.json', 'utf8')
-            const recordedRoutes =  JSON.parse(recordedRoutesJson)
-            if (recordedRoutes.length!==0) {
-                clientSettings.recordedRoutes = recordedRoutes
-                await writeFile('./phone/recordedRoutes.json', JSON.stringify([]))
-            }
-
-            await writeFile(clientConnectionPath, JSON.stringify({
-                lastRead: new Date().getTime(),
-                isSettingsAvailableToClient: false
-            }))
-            setTimeout(async() => {
+            const recordedRoutes = JSON.parse(recordedRoutesJson)
+            if(recordedRoutes.length!==0 || clientSettings.pendingRoutes.length!==0){
+                await writeFile(clientConnectionPath, JSON.stringify({
+                    lastRead: new Date().getTime(),
+                    isSettingsAvailableToClient: false
+                }))
+              
+                if (clientSettings.pendingRoutes.length!==0) {
+                    await writeFile('./phone/pendingRoutes.json', JSON.stringify(clientSettings.pendingRoutes))
+                    clientSettings.pendingRoutes = []
+                }
+                if (recordedRoutes.length!==0) {
+                    clientSettings.recordedRoutes = recordedRoutes
+                    await writeFile('./phone/recordedRoutes.json', JSON.stringify([]))
+                }
                 await writeFile(clientSettingsPath, JSON.stringify(clientSettings))
                 await writeFile(clientConnectionPath, JSON.stringify({
                 lastRead: new Date().getTime(),
                 isSettingsAvailableToClient: true
+                }))
+                console.log('Настройки переданы клиенту');
+            }
+            else {
+                await writeFile(clientConnectionPath, JSON.stringify({
+                lastRead: new Date().getTime(),
+                isSettingsAvailableToClient: true
             }))
-            console.log('Настройки переданы клиенту');
-            }, 1000);
+        }
         }
     }, 1000);
 }
@@ -120,6 +128,7 @@ const searchSettingsPath = async (path: string) => {
  export const onDetachDevice = () => {
     console.log('Телефон отключен');
     clientSettingsPath = ''
+    clientConnectionPath = ''
     clientSettings = null
     shell.exec('fusermount -u /home/orangepi/Desktop/Oslik/media/')
     clearInterval(settingPathTimer)
