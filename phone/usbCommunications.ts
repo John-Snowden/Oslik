@@ -1,5 +1,4 @@
 
-import { TSettings } from './types'
 import { writeFileSync, readFileSync } from 'fs';
 const drivelist = require('drivelist');
 import shell from 'shelljs'
@@ -28,7 +27,7 @@ const mount = async () => {
         if (device.isUSB) {
             shell.exec(`mount ${device.device}1 /home/orangepi/Desktop/Oslik/media`)
             console.log('Usb подключен');
-            clientSettingsPath = '/home/orangepi/Desktop/Oslik/media/oslik/OslikHodovaya.json'
+            clientSettingsPath = '/home/orangepi/Desktop/Oslik/media/oslik/ClientFile.json'
             clientSettings = JSON.parse(readFileSync(clientSettingsPath, 'utf-8'))
             console.log('mounting succeeded in ' + mountingCounter + ' attempts')
             }
@@ -50,7 +49,7 @@ const mount = async () => {
         writeFileSync('./phone/recordedRoutes.json', JSON.stringify([]))
     }
 
-    writeFileSync('/home/orangepi/Desktop/Oslik/media/oslik/OslikHodovaya.json', JSON.stringify(clientSettings))
+    writeFileSync('/home/orangepi/Desktop/Oslik/media/oslik/ClientFile.json', JSON.stringify(clientSettings))
 }
 
 export const onDetachDevice = () => {
