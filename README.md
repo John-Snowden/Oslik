@@ -18,7 +18,8 @@ orangepi
 
 ssh root@192.168.1.112
 password orangepi
-scp -r ~/Desktop/Oslik1.1/Oslik  root@192.168.1.112:/home/orangepi/Desktop
+<!-- scp -r ~/Desktop/Oslik1.1/Oslik  root@192.168.1.112:/home/orangepi/Desktop -->
+scp -r ~/Desktop/Oslik1.1/Oslik  root@192.168.1.112:/
 cd /home/orangepi/Desktop/Oslik
 <!-- nodejs -->
 sudo apt update
@@ -59,7 +60,7 @@ shell.exec('mount /dev/sda1 ./media')
 
 <!-- mount android -->
 sudo apt-get install android-file-transfer
-aft-mtp-mount /home/orangepi/Desktop/Oslik/media/
+aft-mtp-mount /Oslik/media/
 
 <!-- unmount android -->
-fusermount -u /home/orangepi/Desktop/Oslik/media/
+fusermount -u /Oslik/media/

@@ -2,7 +2,7 @@ import { usb } from 'usb';
 import shell from 'shelljs'
 
 import { recordTask, sendTask, start, ubuntuPort } from './COM_ubuntu';
-import { onAttachDevice, onDetachDevice } from './phone/phoneCommunicationUtils'
+import { mountPoint, onAttachDevice, onDetachDevice } from './phone/phoneCommunicationUtils'
 
 console.log('Ослик запущен...');
 
@@ -24,7 +24,7 @@ ubuntuPort.on("data", (data) => {
 });
 
 process.on('unhandledRejection', (err) => { 
-    shell.exec('fusermount -u /home/orangepi/Desktop/Oslik/media/')
+    // shell.exec(`fusermount -u ${mountPoint}`)
     console.error('unhandledRejection',err);
     process.exit(1);
   })

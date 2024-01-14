@@ -28,7 +28,7 @@ const mount = async () => {
             shell.exec(`mount ${device.device}1 /home/orangepi/Desktop/Oslik/media`)
             console.log('Usb подключен');
             clientSettingsPath = '/home/orangepi/Desktop/Oslik/media/oslik/ClientFile.json'
-            clientSettings = JSON.parse(readFileSync(clientSettingsPath, 'utf-8'))
+            clientSettings = JSON.parse(readFileSync(clientSettingsPath, 'utf8'))
             console.log('mounting succeeded in ' + mountingCounter + ' attempts')
             }
         }

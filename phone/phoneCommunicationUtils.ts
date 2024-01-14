@@ -1,4 +1,4 @@
-import {writeFile, readdir, readFile, stat, } from 'fs/promises'
+import {writeFile, readdir, readFile, stat} from 'fs/promises'
 import shell from 'shelljs'
 
 import { TCached, TClient, TServer } from './types'
@@ -11,14 +11,19 @@ let serverFilePath = ''
 let clientFile: TClient | null = null
 let serverFile: TServer | null = null
 let cachedPaths: TCached | null = null
-const mountPoint = '/home/orangepi/Desktop/Oslik/media'
+const pendingStorePath = './phone/pendingRoutes.json'
+const recordedStorePath = './phone/recordedRoutes.json'
+
+// export const mountPoint = './media/'
+export const mountPoint = '/run/user/1000/gvfs'
 const cache = './phone/cache.json'
 
 export const onAttachDevice = () => {
-    console.log('Найден Android');
-    shell.exec(`aft-mtp-mount /home/orangepi/Desktop/Oslik/media/`)
+    console.log('Найдено устройство');
+    // shell.exec(`aft-mtp-mount ${mountPoint}`)
     pathTimer = setInterval(async ()=>{
         const files = await readdir(mountPoint)
+        
         if(files.length === 0) {
             console.log('Разреши обмен данными на Android');
             return
@@ -30,6 +35,8 @@ export const onAttachDevice = () => {
         try {
             const clientJson = await readFile(cachedPaths.clientPath, 'utf8')
             const serverJson = await readFile(cachedPaths.serverPath, 'utf8')
+            clientFilePath = cachedPaths.clientPath
+            serverFilePath = cachedPaths.serverPath
             clientFile = JSON.parse(clientJson)
             serverFile = JSON.parse(serverJson)
             console.log('Путь к настройкам найден в кэше.', cachedPaths)
@@ -42,35 +49,62 @@ export const onAttachDevice = () => {
         }
     }, 1000)
 
- 
-    clientTimer = setInterval(async () => {        
-        if(clientFile && serverFile) {
-            const json = await readFile(clientFilePath, 'utf-8')
-            clientFile = JSON.parse(json) as TClient
-            console.log('clientFile:', clientFile);
-
-            if(clientFile.recorded.modified > serverFile.recorded.modified){
-                serverFile.recorded.routes = []
-                await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
-            }
-
-            if(clientFile.pending.modified > serverFile.pending.modified) {
-                await writeFile('./phone/pendingRoutes.json', JSON.stringify(clientFile.pending.routes))
-                serverFile.pending.modified = new Date().getTime()
-                await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
-                console.log('Загружены новые маршруты');
-                
-            }
-        }
-    }, 1000);
+    watchClient()
 }
 
 
+const watchClient = async () => {
+    clearTimeout(clientTimer)
+    if(clientFile && serverFile) {
+        try {
+            const serverJson = await readFile(serverFilePath, {encoding:'utf8'})
+            serverFile = JSON.parse(serverJson) as TServer
+
+            const clientJson = await readFile(clientFilePath, {encoding:'utf8'})
+            clientFile = JSON.parse(clientJson) as TClient
+            const recordedJson = await readFile(recordedStorePath, 'utf8')
+            const recordedRoutes = JSON.parse(recordedJson)
+
+            if(clientFile.pending.modified > serverFile.pending.modified) {
+                await writeFile(pendingStorePath, JSON.stringify(clientFile.pending.routes), 'utf8')
+                serverFile.pending.modified = new Date().getTime()
+                await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
+                console.log('Загружены новые маршруты');
+            }
+
+            if (clientFile.recorded.modified >= serverFile.recorded.modified){
+                if(recordedRoutes.length !== 0) { 
+                    serverFile.recorded.routes = recordedRoutes
+                    serverFile.recorded.modified = new Date().getTime()
+                    await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
+                    await writeFile(recordedStorePath, JSON.stringify([]), 'utf8')
+                 }
+                 else {
+                     serverFile.recorded.routes = []
+                     await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
+                    console.log('Скачанные маршруты очищены');
+                 }
+            } 
+        } catch (e) {
+            console.log('Ошибка clientTimer');
+        }
+    }
+    clientTimer = setTimeout(() => {
+        watchClient()
+    }, 3000);
+}
+ 
 const searchSettingsPath = async (path: string) => {
     if(clientFilePath && serverFilePath) {
-        console.log("Путь к настройкам клиента найден", clientFilePath);
-        console.log("Путь к настройкам сервера найден", serverFilePath);
-        return
+        try {
+            const clientJson = await readFile(clientFilePath, 'utf8')
+            const serverJson = await readFile(serverFilePath, 'utf8')
+            clientFile = JSON.parse(clientJson)
+            serverFile = JSON.parse(serverJson)
+            return
+        }
+        catch(e){console.log('???', e);
+        }
     }
 
     const files = await readdir(path)
@@ -79,8 +113,8 @@ const searchSettingsPath = async (path: string) => {
         if(file === 'ServerFile.json') serverFilePath = path + '/' + file
         if (clientFilePath && serverFilePath) {
             await writeFile(cache, JSON.stringify({
-                settings:clientFilePath, 
-                connection:serverFilePath
+                clientPath:clientFilePath, 
+                serverPath:serverFilePath
             }), 'utf8')
         }
         else {
@@ -91,14 +125,14 @@ const searchSettingsPath = async (path: string) => {
 }
 
  export const onDetachDevice = () => {
-    console.log('Телефон отключен');
+    console.log('Устройство отключено');
     clientFilePath = ''
     serverFilePath = ''
     clientFile = null
     serverFile = null
-    shell.exec('fusermount -u /home/orangepi/Desktop/Oslik/media/')
+    // shell.exec(`fusermount -u ${mountPoint}`)
     clearInterval(pathTimer)
-    clearInterval(clientTimer)
+    clearTimeout(clientTimer)
 }
 
 
