@@ -1,5 +1,5 @@
 import { SerialPort } from "serialport";
-import { writeFileSync, readFileSync } from 'fs';
+import { writeFile, readFile } from 'fs/promises';
 
 import { TTask } from "./types";
 
@@ -8,15 +8,17 @@ export const ubuntuPort = new SerialPort({
   baudRate: 57600,
 });
 
+let isOperating = false
 let isRecording = false
 let currentTaskIndex = 0;
 let currentRoute: TTask[] = []
 let currentRecordedRoute: TTask[] =[]
 
 const getNextTask = (): string => {
-  currentTaskIndex++;
   const task = currentRoute[currentTaskIndex]
-  const formatted = `id:${task.id},distance:${task.distance},degree:${task.degree},speed:${task.speed},timeout:${task.timeout}`
+  const formatted = `id:${task.id}, distance:${task.distance}, degree:${task.degree}, speed:${task.speed}, timeout:${task.timeout}`
+  currentTaskIndex++;
+  
   return formatted
 };
 
@@ -25,9 +27,10 @@ export const sendTask = () => {
   else ubuntuPort.write(getNextTask());
 };
 
-export const loadNextRoute = () => {
+export const loadNextRoute = async() => {
   currentTaskIndex = 0
-  const routes = JSON.parse(readFileSync('./phone/pendingRoutes.json', 'utf8'))
+  const json = await readFile('./phone/pendingRoutes.json', 'utf8')
+  const routes = JSON.parse(json)
   
   if(routes.length === 0) {
     currentRoute = []
@@ -35,22 +38,23 @@ export const loadNextRoute = () => {
   }
   else {
     currentRoute = routes.shift()
+    await writeFile('./phone/pendingRoutes.json', JSON.stringify(routes), 'utf8')
     console.log('Маршрут загружен');
-    writeFileSync('./phone/pendingRoutes.json', JSON.stringify(routes))
   }
 };
 
-export const recordTask = (data: string) => {
+export const recordTask = async (data: string) => {
   if (data==='start') isRecording = true
   else if (data==='end'){
     isRecording = false
-    const recordedRoutes = JSON.parse(readFileSync('./phone/recordedRoutes.json', 'utf8'))
+    const json = await readFile('./phone/recordedRoutes.json', 'utf8')
+    const recordedRoutes = JSON.parse(json)
     recordedRoutes.push(currentRecordedRoute)
-    writeFileSync('./phone/recordedRoutes.json', JSON.stringify(recordedRoutes))
+    await writeFile('./phone/recordedRoutes.json', JSON.stringify(recordedRoutes))
     currentRecordedRoute = []
   }
   else {
-    const values = data.split(',').map(array=> array.split(':')[1])
+    const values = data.split(', ').map(array=> array.split(':')[1])
     const formatted:TTask = {
       id:values[0],
       distance:Number(values[1]),
@@ -62,8 +66,10 @@ export const recordTask = (data: string) => {
   }
 }
 
-export const start = () => {
-  if (isRecording) return
+export const toggleStart = () => {
+  isOperating = !isOperating
+  console.log(isOperating?'Ослик включен':'Ослик остановлен');
+  if (isRecording || !isOperating) return
   if (currentRoute.length === 0) {
     console.log('Загружается новый маршрут...')
     loadNextRoute()
