@@ -16,11 +16,11 @@ https://192.168.1.9/
 У Германа ssh root@192.168.0.100
 orangepi
 
-ssh root@192.168.1.112
+ssh root@192.168.1.22
 password orangepi
-<!-- scp -r ~/Desktop/Oslik1.1/Oslik  root@192.168.1.112:/home/orangepi/Desktop -->
-scp -r ~/Desktop/Oslik1.1/Oslik  root@192.168.1.112:/
-cd /home/orangepi/Desktop/Oslik
+<!-- scp -r ~/Desktop/Oslik1.1/Oslik  root@192.168.1.22:/home/orangepi/Desktop -->
+scp -r ~/Desktop/Oslik1.1/Oslik  root@192.168.1.22:/
+cd /Oslik
 <!-- nodejs -->
 sudo apt update
 sudo apt install nodejs   
@@ -59,8 +59,11 @@ ls /dev/serial/by-id/
 shell.exec('mount /dev/sda1 ./media')
 
 <!-- mount android -->
+sudo fuser /dev/bus/usb/<BUS>/<DEVICE> -> the pids of the processes which opened your device or none
 sudo apt-get install android-file-transfer
-aft-mtp-mount /Oslik/media/
+aft-mtp-mount /Oslik/media/  ---- presumably this only works with fuser v3. Thus, Ubuntu Jammy desktop (?) xfce linux 5.4.125
+
 
 <!-- unmount android -->
 fusermount -u /Oslik/media/
+umount -f /Oslik/media

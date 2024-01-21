@@ -1,10 +1,10 @@
-import {writeFile, readdir, readFile, stat} from 'fs/promises'
-import {readFileSync, openSync, closeSync} from 'fs'
+import {readFile, writeFile, readdir, stat} from 'fs/promises'
 import shell from 'shelljs'
 
 import { TCached, TClient, TServer } from './types'
 
 let pathTimer: NodeJS.Timeout
+let clientTimer: NodeJS.Timeout
 
 let clientFilePath = ''
 let serverFilePath = ''
@@ -13,8 +13,6 @@ let serverFile: TServer | null = null
 let cachedPaths: TCached | null = null
 const pendingStorePath = './phone/pendingRoutes.json'
 const recordedStorePath = './phone/recordedRoutes.json'
-
-let isReading = false
 
 export const mountPoint = '/Oslik/media/'
 // export const mountPoint = '/run/user/1000/gvfs'
@@ -33,6 +31,7 @@ export const onAttachDevice = () => {
         
         clearInterval(pathTimer)
         const cachedJson = await readFile(cache, 'utf8')
+        console.log('cachedJson',cachedJson);
         cachedPaths = JSON.parse(cachedJson) as TCached
         try {
             const clientJson = await readFile(cachedPaths.clientPath, 'utf8')
@@ -47,7 +46,7 @@ export const onAttachDevice = () => {
         } catch (e) {
             console.log('Кэшированный путь к файлам устарел');
             console.log('Ищу путь к файлу настроек...');
-            await searchSettingsPath(mountPoint)
+            searchSettingsPath(mountPoint)
         }
     }, 1000)
 
@@ -56,29 +55,24 @@ export const onAttachDevice = () => {
 
 
 const watchClient = async () => {
+    console.log('watchClient');
     if(clientFile && serverFile) {
-        if(isReading) return
-        isReading = true
         try {
-            const serverJson = readFileSync(serverFilePath, {encoding:'utf8'})
+            const serverJson = await readFile(serverFilePath, {encoding:'utf8'})
+            console.log('serverJson',serverJson);
             serverFile = JSON.parse(serverJson) as TServer
 
-            const clientFd = openSync(clientFilePath, 'rs')
-            console.log('clientFd', clientFd);
-            
-            const clientJson = readFileSync(clientFd, {encoding:'utf8', flag:'rs'})
-            // const clientJson = readFileSync(clientFilePath, {encoding:'utf8', flag:'rs'})
+            const clientJson = await readFile(clientFilePath, {encoding:'utf8'})
             console.log('clientJson',clientJson);
             clientFile = JSON.parse(clientJson) as TClient
-            console.log('clientFile',clientFile);
-            
-            const recordedJson = readFileSync(recordedStorePath, 'utf8')
+
+            const recordedJson = await readFile(recordedStorePath, 'utf8')
             const recordedRoutes = JSON.parse(recordedJson)
 
             if(clientFile.pending.modified > serverFile.pending.modified) {
-                await writeFile(pendingStorePath, JSON.stringify(clientFile.pending.routes), 'utf8')
+             await writeFile(pendingStorePath, JSON.stringify(clientFile.pending.routes), 'utf8')
                 serverFile.pending.modified = new Date().getTime()
-                await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
+             await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
                 console.log('Загружены новые маршруты');
             }
 
@@ -91,32 +85,42 @@ const watchClient = async () => {
                  }
                  else {
                      serverFile.recorded.routes = []
-                     await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
+                    await writeFile(serverFilePath, JSON.stringify(serverFile), 'utf8')
                     console.log('Скачанные маршруты очищены');
                  }
             } 
-            closeSync(clientFd)
-            console.log('closed clientFd', clientFd);
-            isReading = false
         } catch (e) {
             console.log('Ошибка clientTimer',e);
-    }
-    }
-    setTimeout(() => {
+        } finally {
+            console.log('finaly block');
+            clearTimeout(clientTimer)
+            clientTimer = setTimeout(() => {
+                watchClient()
+            }, 6000);
+        }
+    } else {
+        clearTimeout(clientTimer)
+        clientTimer = setTimeout(() => {
         watchClient()
-    }, 3000);
+        }, 6000);
+    }
 }
  
 const searchSettingsPath = async (path: string) => {
     if(clientFilePath && serverFilePath) {
+        console.log('Путь найден в', clientFilePath, serverFilePath);
         try {
-            const clientJson = await readFile(clientFilePath, 'utf8')
-            const serverJson = await readFile(serverFilePath, 'utf8')
+            const clientJson = await readFile(clientFilePath, 'utf8')            
             clientFile = JSON.parse(clientJson)
+        }
+        catch(e){console.log('clientJson ???', e);
+        }
+        try {
+            const serverJson = await readFile(serverFilePath, 'utf8')
             serverFile = JSON.parse(serverJson)
             return
         }
-        catch(e){console.log('???', e);
+        catch(e){console.log('serverJson ???', e);
         }
     }
 
@@ -131,6 +135,7 @@ const searchSettingsPath = async (path: string) => {
             }), 'utf8')
         }
         else {
+            console.log('Ищу в', path + '/' + file);
             const stats = await stat(path + '/' + file)
             if(stats.isDirectory()) searchSettingsPath(path + '/' + file)
         }
@@ -145,6 +150,7 @@ const searchSettingsPath = async (path: string) => {
     serverFile = null
     shell.exec(`fusermount -u ${mountPoint}`)
     clearInterval(pathTimer)
+    clearInterval(clientTimer)
 }
 
 
