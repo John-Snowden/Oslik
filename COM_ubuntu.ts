@@ -18,13 +18,17 @@ const getNextTask = (): string => {
   const task = currentRoute[currentTaskIndex]
   const formatted = `id:${task.id}, distance:${task.distance}, degree:${task.degree}, speed:${task.speed}, timeout:${task.timeout}`
   currentTaskIndex++;
-  
   return formatted
 };
 
 export const sendTask = () => {
   if (currentRoute.length === currentTaskIndex) console.log('Маршрут завершен');
-  else ubuntuPort.write(getNextTask());
+  else {
+    const nextTask = getNextTask()
+    console.log("Отправляю маршрут на Arduino ", nextTask);
+    ubuntuPort.write(nextTask);
+    ubuntuPort.write('test');
+  }
 };
 
 export const loadNextRoute = async() => {
@@ -40,6 +44,7 @@ export const loadNextRoute = async() => {
     currentRoute = routes.shift()
     await writeFile('./phone/pendingRoutes.json', JSON.stringify(routes), 'utf8')
     console.log('Маршрут загружен');
+    sendTask()
   }
 };
 
@@ -74,5 +79,4 @@ export const toggleStart = () => {
     console.log('Загружается новый маршрут...')
     loadNextRoute()
   }
-  sendTask()
 }
