@@ -1,4 +1,4 @@
-'[power]' - start new route/stop/resume current task
+'[go]' - start new route/resume current task
 '[r]' - get next task
 '[w]:start' - begin recording new route
 '[w]:end' - end recording new route

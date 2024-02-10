@@ -5,10 +5,10 @@ import { TTask } from "./types";
 
 export const ubuntuPort = new SerialPort({
   path:"/dev/serial/by-id/usb-Arduino_Uno_Arduino_Uno_2017-2-25-if00",
-  baudRate: 57600,
+  baudRate: 115200,
 });
 
-let isOperating = false
+
 let isRecording = false
 let currentTaskIndex = 0;
 let currentRoute: TTask[] = []
@@ -25,9 +25,8 @@ export const sendTask = () => {
   if (currentRoute.length === currentTaskIndex) console.log('Маршрут завершен');
   else {
     const nextTask = getNextTask()
-    console.log("Отправляю маршрут на Arduino ", nextTask);
-    ubuntuPort.write(nextTask);
-    ubuntuPort.write('test');
+    console.log("Отправляю маршрут на Arduino", nextTask);
+    ubuntuPort.write(nextTask, (e) => {if(e)console.log('Ошибка отправки на Ардуино', e)});
   }
 };
 
@@ -41,7 +40,9 @@ export const loadNextRoute = async() => {
     console.log('Маршрутов больше нет')
   }
   else {
-    currentRoute = routes.shift()
+    // TODO uncomment
+    // currentRoute = routes.shift()
+    currentRoute = routes[0]
     await writeFile('./phone/pendingRoutes.json', JSON.stringify(routes), 'utf8')
     console.log('Маршрут загружен');
     sendTask()
@@ -72,9 +73,7 @@ export const recordTask = async (data: string) => {
 }
 
 export const toggleStart = () => {
-  isOperating = !isOperating
-  console.log(isOperating?'Ослик включен':'Ослик остановлен');
-  if (isRecording || !isOperating) return
+  if (isRecording) return
   if (currentRoute.length === 0) {
     console.log('Загружается новый маршрут...')
     loadNextRoute()

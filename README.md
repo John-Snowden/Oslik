@@ -12,7 +12,8 @@ sudo chmod o+rw /dev/pts
 <!-- OrangePI  -->
 https://192.168.1.9/
 
-сеть TP-LINK_98B814 GKvattech
+сеть TP-LINK_98B814 GKvattech 
+сеть YDK-01 YDK1pass
 У Германа ssh root@192.168.0.100
 orangepi
 

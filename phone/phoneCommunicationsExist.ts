@@ -70,7 +70,7 @@ const watchClientUpdate = async () => {
                 const clientJson = await readFile(clientFilePath, 'utf8')
                 const clientFile = JSON.parse(clientJson) as TRoutes
                 await writeFile(pendingStorePath, JSON.stringify(clientFile.routes), 'utf8')
-                // console.log('Загружены новые маршруты');
+                console.log('Загружены новые маршруты');
                 await unlink(clientUpdatedPath)
             } catch (e){
                 console.log('Ошибка чтения clientFilePath', e);
@@ -114,7 +114,7 @@ const watchStoredRecorded = async () => {
             }
             try {
                 await writeFile(recordedStorePath, JSON.stringify([]), 'utf8')
-                // console.log('Сохраненные маршруты переданы приложению');
+                console.log('Сохраненные маршруты переданы приложению');
             }
             catch (e){console.log('Ошибка записи recordedStorePath', e);
             }
