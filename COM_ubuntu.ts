@@ -2,11 +2,8 @@ import { SerialPort } from "serialport";
 import { writeFile, readFile } from 'fs/promises';
 
 import { TTask } from "./types";
+import { arduinoPort } from ".";
 
-export const ubuntuPort = new SerialPort({
-  path:"/dev/serial/by-id/usb-Arduino_Uno_Arduino_Uno_2017-2-25-if00",
-  baudRate: 115200,
-});
 
 
 let isRecording = false
@@ -26,7 +23,7 @@ export const sendTask = () => {
   else {
     const nextTask = getNextTask()
     console.log("Отправляю маршрут на Arduino", nextTask);
-    ubuntuPort.write(nextTask, (e) => {if(e)console.log('Ошибка отправки на Ардуино', e)});
+    arduinoPort.write(nextTask, (e) => {if(e)console.log('Ошибка отправки на Ардуино', e)});
   }
 };
 

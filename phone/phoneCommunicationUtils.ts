@@ -20,7 +20,7 @@ export const mountPoint = '/Oslik/media/'
 // export const mountPoint = '/run/user/1000/gvfs'
 const cache = './phone/cache.json'
 
-export const onAttachDevice = () => {
+export const onAttachAndroid = () => {
     console.log('Найдено устройство');
     shell.exec(`aft-mtp-mount ${mountPoint}`)
     pathTimer = setInterval(async ()=>{

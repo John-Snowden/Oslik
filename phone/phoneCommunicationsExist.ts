@@ -19,7 +19,7 @@ const recordedStorePath = './phone/recordedRoutes.json'
 export const mountPoint = '/Oslik/media/'
 // export const mountPoint = '/run/user/1000/gvfs'
 
-export const onAttachDevice = () => {
+export const onAttachAndroid = () => {
     console.log('Найдено устройство');
     shell.exec(`aft-mtp-mount ${mountPoint}`)
     pathTimer = setInterval(async ()=>{
@@ -152,13 +152,13 @@ const searchSettingsPath = async (path: string) => {
     })
 }
 
- export const onDetachDevice = () => {
+ export const onDetachDevice = (data:any) => {
     console.log('Устройство отключено');
+    if(data.deviceDescriptor.idVendor!==9025)shell.exec(`fusermount -u ${mountPoint}`)
     clientFilePath = ''
     serverFilePath = ''
     clientUpdatedPath = ''
     serverUpdatedPath = ''
-    shell.exec(`fusermount -u ${mountPoint}`)
     clearInterval(pathTimer)
     clearInterval(clientTimer)
     clearInterval(serverTimer)

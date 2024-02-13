@@ -8,7 +8,7 @@ let clientSettings: TSettings | null = null
 
 let mountingCounter = 0
 
-export const onAttachDevice = async () => {
+export const onAttachAndroid = async () => {
     const mountingTimer = setInterval(()=>{
         if (clientSettingsPath) {
             clearInterval(mountingTimer)
