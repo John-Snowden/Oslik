@@ -4,8 +4,6 @@ import { writeFile, readFile } from 'fs/promises';
 import { TTask } from "./types";
 import { arduinoPort } from ".";
 
-
-
 let isRecording = false
 let currentTaskIndex = 0;
 let currentRoute: TTask[] = []

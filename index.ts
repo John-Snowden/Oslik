@@ -6,29 +6,24 @@ import { ReadlineParser } from '@serialport/parser-readline'
 import { recordTask, sendTask, toggleStart } from './COM_ubuntu';
 import { mountPoint, onAttachAndroid, onDetachDevice } from './phone/phoneCommunicationsExist'
 
-export const arduinoPort = new SerialPort({
-  path:"/dev/serial/by-id/usb-Arduino_Uno_Arduino_Uno_2017-2-25-if00",
+export const arduinoPath = "/dev/serial/by-id/usb-Arduino_Uno_Arduino_Uno_2017-2-25-if00"
+export let arduinoPort = new SerialPort({
+  path:arduinoPath,
   baudRate: 115200,
 });
 
-const devices = getDeviceList();
-
 console.log('Ослик запущен...');
 
-usb.on('attach', ()=> {
-  const isArduino = devices.find(device => device.deviceDescriptor.idVendor === 9025)
- if(isArduino){
-  console.log('isArduino', isArduino.deviceDescriptor.idVendor);
-  console.log('isArduino', Boolean(isArduino));
- }
- else onAttachAndroid()
+usb.on('attach', async (data)=> {
+  const isArduino = data.deviceDescriptor.idVendor === 9025 && data.deviceDescriptor.idProduct === 67
+  if(isArduino) setTimeout(() => arduinoPort.open(), 500);
+  else onAttachAndroid()
 })
-usb.on('detach', onDetachDevice)
 
 arduinoPort.on("open", () => console.log("Порт arduino открыт\n\n"));
 
 arduinoPort.on('error', function(err) {
-  console.log('arduinoPort error: ', err.message);
+  console.log('arduinoPort: ', err.message);
 })
 
 const parser = arduinoPort.pipe(new ReadlineParser())
@@ -40,6 +35,8 @@ parser.on("data", (data) => {
   else if(trimmed === '[r]') sendTask()
   else if(trimmed.includes('[w]')) recordTask(trimmed.split('[w]:')[1])
 });
+
+usb.on('detach', onDetachDevice)
 
 process.on('unhandledRejection', (err) => { 
     // TODO uncomment

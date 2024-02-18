@@ -153,9 +153,11 @@ const searchSettingsPath = async (path: string) => {
 }
 
  export const onDetachDevice = (data:any) => {
-    console.log('Устройство отключено');
-    if(data.deviceDescriptor.idVendor!==9025)shell.exec(`fusermount -u ${mountPoint}`)
-    clientFilePath = ''
+    if(data.deviceDescriptor.idVendor!==9025){
+        shell.exec(`fusermount -u ${mountPoint}`)
+        console.log('Android отключен');
+    }
+    else console.log('\nArduino отключено\n');
     serverFilePath = ''
     clientUpdatedPath = ''
     serverUpdatedPath = ''
