@@ -17,7 +17,10 @@ const getNextTask = (): string => {
 };
 
 export const sendTask = () => {
-  if (currentRoute.length === currentTaskIndex) console.log('Маршрут завершен');
+  if (currentRoute.length === currentTaskIndex) {
+    console.log('Маршрут завершен');
+    arduinoPort.write('end', (e) => {if(e)console.log('Ошибка отправки на Ардуино', e)});
+  }
   else {
     const nextTask = getNextTask()
     console.log("Отправляю маршрут на Arduino", nextTask);
@@ -69,8 +72,5 @@ export const recordTask = async (data: string) => {
 
 export const toggleStart = () => {
   if (isRecording) return
-  if (currentRoute.length === 0) {
-    console.log('Загружается новый маршрут...')
-    loadNextRoute()
-  }
+  if (currentRoute.length === 0) loadNextRoute()
 }

@@ -1,6 +1,6 @@
 import shell from 'shelljs'
 import { SerialPort } from 'serialport';
-import { usb, getDeviceList } from 'usb';
+import { usb } from 'usb';
 import { ReadlineParser } from '@serialport/parser-readline'
 
 import { recordTask, sendTask, toggleStart } from './COM_ubuntu';
